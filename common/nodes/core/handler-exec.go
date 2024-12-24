@@ -451,11 +451,11 @@ func (e *Executor) MultipartComplete(ctx context.Context, target *tree.Node, upl
 	}
 
 	mTime := oi.LastModified
-	olm, exists := oi.Metadata["X-Amz-Meta-Original-Last-Modified"] // TODO: make enum
+	olm, exists := oi.Metadata["X-Amz-Meta-Mtime"] // TODO: make enum
 	if exists {
 		ts, err := strconv.ParseInt(olm[0], 10, 64)
 		if err != nil {
-			log.Logger(ctx).Error("Failed to parse string as int64", zap.String("Target", target.GetPath()), zap.String("X-Amz-Meta-Original-Last-Modified", olm[0]))
+			log.Logger(ctx).Error("Failed to parse string as int64", zap.String("Target", target.GetPath()), zap.String("X-Amz-Meta-Mtime", olm[0]))
 		} else {
 			log.Logger(ctx).Debug("Setting MTime to original last modified time", zap.String("Path", target.Path), zap.Int64("timestamp", ts))
 			mTime = time.Unix(ts, 0)

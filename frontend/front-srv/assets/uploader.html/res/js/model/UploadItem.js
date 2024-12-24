@@ -47,7 +47,7 @@ class UploadItem extends StatusItem {
         if (!this._userMeta) {
             this._userMeta = {}
         }
-        this._userMeta["Original-Last-Modified"] = (Math.round(this._file.lastModified / 1000)).toString();
+        this._userMeta["Mtime"] = (Math.round(this._file.lastModified / 1000)).toString(); // TODO: make enum
     }
 
     createParts(){
