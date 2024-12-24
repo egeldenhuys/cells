@@ -26,7 +26,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -35,7 +34,6 @@ import (
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 
 	"github.com/pydio/cells/v4/common"
-	"github.com/pydio/cells/v4/common/log"
 	"github.com/pydio/cells/v4/common/nodes"
 	"github.com/pydio/cells/v4/common/nodes/models"
 	"github.com/pydio/cells/v4/common/proto/object"
@@ -440,23 +438,7 @@ func minioUploadInfoToModelsInfo(opts models.PutMeta, oi minio.UploadInfo) model
 		om.Set(k, v)
 	}
 	if oi.LastModified.IsZero() {
-		olm, exists := opts.UserMetadata["X-Amz-Meta-Original-Last-Modified"] // TODO: make enum
-		if exists {
-			log.Info(fmt.Sprintf("oi.LastModified is not set for file [%s], using original last modified time: %s", oi.Key, olm))
-
-			ts, err := strconv.ParseInt(olm, 10, 64)
-			if err != nil {
-				log.Info(fmt.Sprintf("Failed to parse Original Last Modified to int64: [%s], reason: %s", olm, err.Error()))
-				oi.LastModified = time.Now()
-			} else {
-				oi.LastModified = time.Unix(ts, 0)
-			}
-
-		} else {
-			oi.LastModified = time.Now()
-		}
-	} else {
-		log.Info(fmt.Sprintf("oi.LastModified is already set for file [%s]: %s", oi.Key, oi.LastModified))
+		oi.LastModified = time.Now()
 	}
 
 	return models.ObjectInfo{

@@ -265,8 +265,22 @@ func (f *FlatStorageHandler) postCreate(ctx context.Context, node *tree.Node, re
 	} else {
 		return fmt.Errorf("missing uuid info to postCreate node")
 	}
+
 	if object != nil {
-		updateNode.MTime = object.LastModified.Unix()
+		olm, exists := requestMeta["X-Amz-Meta-Original-Last-Modified"] // TODO: make enum
+		if exists {
+			ts, err := strconv.ParseInt(olm, 10, 64)
+			if err != nil {
+				log.Logger(ctx).Error("Failed to parse string as as int64", zap.String("Path", node.Path), zap.String("X-Amz-Meta-Original-Last-Modified", olm))
+				updateNode.MTime = object.LastModified.Unix()
+			} else {
+				log.Logger(ctx).Debug("Setting MTime to original last modified time", zap.String("Path", node.Path), zap.Int64("timestamp", ts))
+				updateNode.MTime = ts
+			}
+		} else {
+			updateNode.MTime = object.LastModified.Unix()
+		}
+
 		updateNode.Size = object.Size
 		updateNode.Etag = object.ETag
 	} else if ss, err := f.ReadNode(ctx, &tree.ReadNodeRequest{Node: node, ObjectStats: true}); err == nil {
