@@ -44,7 +44,12 @@ class UploadItem extends StatusItem {
         if(parent){
             parent.addChild(this);
         }
+        if (!this._userMeta) {
+            this._userMeta = {}
+        }
+        this._userMeta["Original-Last-Modified"] = (Math.round(this._file.lastModified / 1000)).toString();
     }
+
     createParts(){
         const partSize = PydioApi.getMultipartPartSize();
         this._parts = [];
