@@ -267,11 +267,11 @@ func (f *FlatStorageHandler) postCreate(ctx context.Context, node *tree.Node, re
 	}
 
 	if object != nil {
-		olm, exists := requestMeta["X-Amz-Meta-Mtime"] // TODO: make enum
+		olm, exists := requestMeta[common.XAmzMetaMtime]
 		if exists {
 			ts, err := strconv.ParseInt(olm, 10, 64)
 			if err != nil {
-				log.Logger(ctx).Error("Failed to parse string as as int64", zap.String("Path", node.Path), zap.String("X-Amz-Meta-Mtime", olm)) // TODO: make enum
+				log.Logger(ctx).Error("Failed to parse string as as int64", zap.String("Path", node.Path), zap.String(common.XAmzMetaMtime, olm))
 				updateNode.MTime = object.LastModified.Unix()
 			} else {
 				log.Logger(ctx).Debug("Setting MTime to original last modified time", zap.String("Path", node.Path), zap.Int64("timestamp", ts))
