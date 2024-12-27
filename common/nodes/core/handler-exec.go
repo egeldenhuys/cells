@@ -22,6 +22,7 @@ package core
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"path"
@@ -373,7 +374,9 @@ func (e *Executor) MultipartPutObjectPart(ctx context.Context, target *tree.Node
 		return models.MultipartObjectPart{PartNumber: partNumberMarker}, errors.BadRequest("put.part.empty", "trying to upload a part object that has no data. Double check")
 	}
 
-	cp, err := writer.PutObjectPart(ctx, info.ObjectsBucket, s3Path, uploadID, partNumberMarker, reader, requestData.Size, hex.EncodeToString(requestData.Md5Sum), hex.EncodeToString(requestData.Sha256Sum))
+	// Md5Sum should be base64 encoded.
+	// Related: https://forum.pydio.com/t/rclone-cant-perform-a-s3-multipart-upload-to-pydio/5377
+	cp, err := writer.PutObjectPart(ctx, info.ObjectsBucket, s3Path, uploadID, partNumberMarker, reader, requestData.Size, base64.StdEncoding.EncodeToString(requestData.Md5Sum), hex.EncodeToString(requestData.Sha256Sum))
 	if err != nil {
 		log.Logger(ctx).Error("PutObjectPart has failed", zap.Error(err))
 		return models.MultipartObjectPart{PartNumber: partNumberMarker}, err
@@ -465,7 +468,8 @@ func (e *Executor) MultipartComplete(ctx context.Context, target *tree.Node, upl
 	mTime := oi.LastModified
 	olm, exists := oi.Metadata[common.XAmzMetaMtime]
 	if exists {
-		ts, err := strconv.ParseInt(olm[0], 10, 64)
+		// Rclone uses the format 1734291796.335672747
+		ts, err := strconv.ParseInt(strings.Split(olm[0], ".")[0], 10, 64)
 		if err != nil {
 			log.Logger(ctx).Error("Failed to parse string as int64", zap.String("Target", target.GetPath()), zap.String(common.XAmzMetaMtime, olm[0]))
 		} else {

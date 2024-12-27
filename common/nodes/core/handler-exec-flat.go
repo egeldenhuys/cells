@@ -269,7 +269,8 @@ func (f *FlatStorageHandler) postCreate(ctx context.Context, node *tree.Node, re
 	if object != nil {
 		olm, exists := requestMeta[common.XAmzMetaMtime]
 		if exists {
-			ts, err := strconv.ParseInt(olm, 10, 64)
+			// Rclone uses the format 1734291796.335672747
+			ts, err := strconv.ParseInt(strings.Split(olm, ".")[0], 10, 64)
 			if err != nil {
 				log.Logger(ctx).Error("Failed to parse string as as int64", zap.String("Path", node.Path), zap.String(common.XAmzMetaMtime, olm))
 				updateNode.MTime = object.LastModified.Unix()
