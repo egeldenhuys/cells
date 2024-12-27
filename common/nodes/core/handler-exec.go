@@ -256,6 +256,12 @@ func (e *Executor) CopyObject(ctx context.Context, from *tree.Node, to *tree.Nod
 		if cs := src.Metadata.Get(common.XAmzMetaClearSize); cs != "" {
 			requestData.Metadata[common.XAmzMetaClearSize] = cs
 		}
+
+		if cs := src.Metadata.Get(common.XAmzMetaMtime); cs != "" {
+			log.Logger(ctx).Debug("Preserving Mtime", zap.String("to.Path", to.Path), zap.String("Mtime", cs))
+			requestData.Metadata[common.XAmzMetaMtime] = cs
+		}
+
 		directive, dirOk := requestData.Metadata[common.XAmzMetaDirective]
 		if dirOk {
 			delete(requestData.Metadata, common.XAmzMetaDirective)
@@ -311,6 +317,12 @@ func (e *Executor) CopyObject(ctx context.Context, from *tree.Node, to *tree.Nod
 			}
 			ctxMeta[k] = v
 		}
+
+		if mt := srcStat.Metadata.Get(common.XAmzMetaMtime); mt != "" {
+			log.Logger(ctx).Debug("Preserving Mtime", zap.String("to.Path", to.Path), zap.String("Mtime", mt))
+			requestData.Metadata[common.XAmzMetaMtime] = mt
+		}
+
 		ctx = metadata.NewContext(ctx, ctxMeta)
 
 		log.Logger(ctx).Debug("HandlerExec: copy one DS to another", zap.Any("meta", srcStat), zap.Any("requestMeta", requestData.Metadata))

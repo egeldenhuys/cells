@@ -186,6 +186,7 @@ const (
 	XAmzMetaNodeUuid            = "X-Amz-Meta-Pydio-Node-Uuid"
 	XAmzMetaContentMd5          = "X-Amz-Meta-Content-Md5"
 	XAmzMetaDirective           = "X-Amz-Metadata-Directive"
+	XAmzMetaMtime               = "X-Amz-Meta-Mtime"
 	XPydioClientUuid            = "X-Pydio-Client-Uuid"
 	XPydioSessionUuid           = "X-Pydio-Session"
 	XPydioIndexationSessionUuid = "X-Pydio-Indexation-Session"
