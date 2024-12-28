@@ -111,6 +111,21 @@ func (f *FlatStorageHandler) CopyObject(ctx context.Context, from *tree.Node, to
 	if requestData.Metadata == nil {
 		requestData.Metadata = map[string]string{}
 	}
+	updateIfExists := false
+
+	// Might need this...
+	if dir, o := requestData.Metadata[common.XAmzMetaDirective]; o && dir == "REPLACE" {
+		log.Logger(ctx).Warn("handler-exec-flat CopyObject - Received REPLACE meta directive", zap.Any("from", from), zap.Any("to", to), zap.Any("requestData", requestData))
+		updateIfExists = true
+
+		if e := f.resolveUUID(ctx, to); e != nil {
+			return models.ObjectInfo{}, e
+		}
+		if e := f.resolveUUID(ctx, from); e != nil {
+			return models.ObjectInfo{}, e
+		}
+	}
+
 	if nodes.IsFlatStorage(ctx, "to") {
 		if len(requestData.SrcVersionId) > 0 {
 			if e := f.resolveUUID(ctx, to); e != nil {
@@ -133,7 +148,7 @@ func (f *FlatStorageHandler) CopyObject(ctx context.Context, from *tree.Node, to
 			if ctype := from.GetStringMeta(common.MetaNamespaceMime); ctype != "" {
 				temporary.MustSetMeta(common.MetaNamespaceMime, ctype)
 			}
-			if _, er := f.ClientsPool.GetTreeClientWrite().CreateNode(ctx, &tree.CreateNodeRequest{Node: temporary}); er != nil {
+			if _, er := f.ClientsPool.GetTreeClientWrite().CreateNode(ctx, &tree.CreateNodeRequest{Node: temporary, UpdateIfExists: updateIfExists}); er != nil {
 				return models.ObjectInfo{}, er
 			}
 			// Attach Uuid to target node

@@ -31,6 +31,7 @@ import (
 	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/bucket/policy"
 	"github.com/minio/minio/pkg/bucket/policy/condition"
+	"go.uber.org/zap"
 
 	"github.com/pydio/cells/v4/common"
 	"github.com/pydio/cells/v4/common/log"
@@ -438,16 +439,21 @@ func (l *pydioObjects) PutObject(ctx context.Context, bucket, object string, dat
 func (l *pydioObjects) CopyObject(ctx context.Context, srcBucket string, srcObject string, destBucket string, destObject string,
 	srcInfo minio.ObjectInfo, srcOpts, dstOpts minio.ObjectOptions) (objInfo minio.ObjectInfo, e error) {
 
+	meta := make(map[string]string)
+
 	if srcObject == destObject && srcOpts.VersionID == "" {
-		// log.Printf("Coping %v to %v, this is a REPLACE meta directive \n", srcObject, destObject)
-		// log.Println(requestMetadata)
-		return objInfo, (&minio.NotImplemented{})
+		log.Logger(ctx).Warn("gateway-pydio CopyObject - Received REPLACE meta directive", zap.String("srcObject", srcObject), zap.String("destBucket", destBucket))
+		meta[common.XAmzMetaDirective] = "REPLACE"
+
+		// return objInfo, (&minio.NotImplemented{})
 	}
+
 	oi, err := l.Router.CopyObject(ctx, &tree.Node{
 		Path: strings.TrimLeft(srcObject, "/"),
 	}, &tree.Node{
 		Path: strings.TrimLeft(destObject, "/"),
 	}, &models.CopyRequestData{
+		Metadata:     meta,
 		SrcVersionId: srcOpts.VersionID,
 	})
 
