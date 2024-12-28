@@ -156,6 +156,15 @@ func (f *FlatStorageHandler) CopyObject(ctx context.Context, from *tree.Node, to
 			revertNode = temporary
 		}
 	}
+
+	if from.GetUuid() == "" {
+		log.Logger(ctx).Warn("handler-exec-flat - CopyObject: empty from node UUID. Resolving it", zap.Any("from", from))
+		if e := f.resolveUUID(ctx, from); e != nil {
+			return models.ObjectInfo{}, e
+		}
+		log.Logger(ctx).Warn("handler-exec-flat - CopyObject: resolved to", zap.Any("from.GetUuid()", from.GetUuid()))
+	}
+
 	objectInfo, e := f.Next.CopyObject(ctx, from, to, requestData)
 	if e == nil && nodes.IsFlatStorage(ctx, "to") {
 		// Create an "in" context with resolver
