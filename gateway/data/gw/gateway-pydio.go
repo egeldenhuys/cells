@@ -441,8 +441,11 @@ func (l *pydioObjects) CopyObject(ctx context.Context, srcBucket string, srcObje
 
 	meta := make(map[string]string)
 
+	log.Logger(ctx).Warn("gateway-pydio - CopyObject: Setting Mtime header based on source ModTime")
+	meta[common.XAmzMetaMtime] = strconv.FormatInt(srcInfo.ModTime.Unix(), 10)
+
 	if srcObject == destObject && srcOpts.VersionID == "" {
-		log.Logger(ctx).Warn("gateway-pydio CopyObject - Received REPLACE meta directive", zap.String("srcObject", srcObject), zap.String("destBucket", destBucket))
+		log.Logger(ctx).Warn("gateway-pydio - CopyObject: Received REPLACE meta directive", zap.String("srcObject", srcObject), zap.String("destBucket", destBucket))
 		meta[common.XAmzMetaDirective] = "REPLACE"
 
 		// return objInfo, (&minio.NotImplemented{})

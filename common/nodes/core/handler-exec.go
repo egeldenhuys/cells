@@ -259,7 +259,7 @@ func (e *Executor) CopyObject(ctx context.Context, from *tree.Node, to *tree.Nod
 		}
 
 		if cs := src.Metadata.Get(common.XAmzMetaMtime); cs != "" {
-			log.Logger(ctx).Debug("Preserving Mtime", zap.String("to.Path", to.Path), zap.String("Mtime", cs))
+			log.Logger(ctx).Debug("handler-exec - CopyObject: Preserving Mtime from meta header", zap.String("to.Path", to.Path), zap.String("Mtime", cs))
 			requestData.Metadata[common.XAmzMetaMtime] = cs
 		}
 
