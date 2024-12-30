@@ -22,7 +22,9 @@ package grpc
 
 import (
 	"context"
+	"os"
 	"path"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -130,6 +132,12 @@ func (e *MicroEventsSubscriber) HandleNodeChange(ctx context.Context, msg *tree.
 		// Ignore events triggered by initial sync
 		return nil
 	}
+
+	if slices.Contains(strings.Split(os.Getenv("PYDIO_IGNORE_ACTIVITIES_USERS"), ","), author) {
+		// Ignore activities for rclone users since they generate excessive activities
+		return nil
+	}
+
 	log.Logger(ctx).Debug("Fan out event to activities", zap.String(common.KeyUser, author), msg.Zap())
 
 	// Create Activities and post them to associated inboxes
