@@ -8,7 +8,8 @@ WORKDIR /src
 # https://github.com/montanaflynn/golang-docker-cache
 # https://github.com/golang/go/issues/27719
 COPY go.mod go.sum .
-RUN deps=($(go mod graph | awk '{if ($1 !~ "@") print $2}')); for i in "${deps[@]}"; do go get "$i"; done
+COPY ./tools/docker/download-go-mods.sh .
+RUN chmod +x ./download-go-mods.sh && ./download-go-mods.sh
 
 COPY . .
 RUN make build
