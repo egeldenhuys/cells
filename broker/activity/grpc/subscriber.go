@@ -133,7 +133,7 @@ func (e *MicroEventsSubscriber) HandleNodeChange(ctx context.Context, msg *tree.
 		return nil
 	}
 
-	if slices.Contains(strings.Split(os.Getenv("PYDIO_IGNORE_ACTIVITIES_USERS"), ","), author) {
+	if slices.Contains(strings.Split(os.Getenv("CELLS_IGNORE_ACTIVITIES_USERS"), ","), author) {
 		// Ignore activities for rclone users since they generate excessive activities
 		return nil
 	}
