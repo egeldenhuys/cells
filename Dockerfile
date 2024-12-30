@@ -1,6 +1,14 @@
 # Handle certificate and download in a distinct stage to reduce image size
 FROM docker.io/golang:1.23 as builder
 WORKDIR /src
+
+# From: https://github.com/runatlantis/atlantis/pull/3107
+# This is needed to download transitive dependencies instead of compiling them
+# https://github.com/montanaflynn/golang-docker-cache
+# https://github.com/golang/go/issues/27719
+COPY go.mod go.sum .
+RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get
+
 COPY . .
 RUN make build
 
