@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,6 +41,7 @@ import (
 	"github.com/pydio/cells/v4/common/nodes/models"
 	"github.com/pydio/cells/v4/common/proto/tree"
 	"github.com/pydio/cells/v4/common/runtime"
+	"github.com/pydio/cells/v4/common/service/context/metadata"
 	cerrors "github.com/pydio/cells/v4/common/service/errors"
 )
 
@@ -439,15 +441,42 @@ func (l *pydioObjects) PutObject(ctx context.Context, bucket, object string, dat
 func (l *pydioObjects) CopyObject(ctx context.Context, srcBucket string, srcObject string, destBucket string, destObject string,
 	srcInfo minio.ObjectInfo, srcOpts, dstOpts minio.ObjectOptions) (objInfo minio.ObjectInfo, e error) {
 
+	statMeta, ok := metadata.MinioMetaFromContext(ctx)
+	if !ok {
+		log.Logger(ctx).Error("gateway-pydio CopyObject: Failed to get metadata from context")
+	}
+
+	log.Logger(ctx).Debug("gateway-pydio CopyObject - Received request",
+		zap.Any("srcBucket", srcBucket),
+		zap.Any("srcObject", srcObject),
+		zap.Any("destBucket", destBucket),
+		zap.Any("destObject", destObject),
+		zap.Any("srcInfo", srcInfo),
+		zap.Any("srcOpts.UserDefined", srcOpts.UserDefined),
+		zap.Any("dstOpts.UserDefined", dstOpts.UserDefined),
+		zap.Any("statMeta", statMeta))
+
 	meta := make(map[string]string)
 
-	log.Logger(ctx).Warn("gateway-pydio - CopyObject: Setting Mtime header based on source ModTime")
-	meta[common.XAmzMetaMtime] = strconv.FormatInt(srcInfo.ModTime.Unix(), 10)
+	if directive, ok := statMeta[common.XAmzMetaDirective]; ok {
+		meta[common.XAmzMetaDirective] = directive
+		log.Logger(ctx).Debug("gateway-pydio - CopyObject: Received directive", zap.String(common.XAmzMetaDirective, directive))
+
+		if directive == "REPLACE" {
+			if mtime, ok := statMeta[common.XAmzMetaMtime]; ok {
+				log.Logger(ctx).Warn("gateway-pydio - CopyObject: REPLACE directive - using Mtime from request", zap.String(common.XAmzMetaMtime, mtime))
+			}
+		} else {
+			// Default COPY
+			origMtime := strconv.FormatInt(srcInfo.ModTime.Unix(), 10)
+			meta[common.XAmzMetaMtime] = origMtime
+			log.Logger(ctx).Warn("gateway-pydio - CopyObject: using Mtime from source file", zap.String("origMtime", origMtime))
+
+		}
+	}
 
 	if srcObject == destObject && srcOpts.VersionID == "" {
-		log.Logger(ctx).Warn("gateway-pydio - CopyObject: Received REPLACE meta directive", zap.String("srcObject", srcObject), zap.String("destBucket", destBucket))
-		meta[common.XAmzMetaDirective] = "REPLACE"
-
+		log.Logger(ctx).Warn("gateway-pydio - CopyObject: srcObject == destObject", zap.String("srcObject", srcObject), zap.String("destObject", destObject))
 		// return objInfo, (&minio.NotImplemented{})
 	}
 

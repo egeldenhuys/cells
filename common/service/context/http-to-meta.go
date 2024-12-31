@@ -116,6 +116,13 @@ func HttpRequestInfoToMetadata(ctx context.Context, req *http.Request) context.C
 		meta[HttpMetaCookiesString] = strings.Join(cString, "//")
 	}
 
+	// S3 Meta headers required for rclone functionality
+	for k, v := range req.Header {
+		if strings.HasPrefix(k, common.XAmzMetaPrefix) {
+			meta[k] = v[0]
+		}
+	}
+
 	return metadata.NewContext(ctx, meta)
 }
 

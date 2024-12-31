@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -113,18 +114,21 @@ func (f *FlatStorageHandler) CopyObject(ctx context.Context, from *tree.Node, to
 	}
 	updateIfExists := false
 
-	// Might need this...
 	if dir, o := requestData.Metadata[common.XAmzMetaDirective]; o && dir == "REPLACE" {
-		log.Logger(ctx).Warn("handler-exec-flat CopyObject - Received REPLACE meta directive", zap.Any("from", from), zap.Any("to", to), zap.Any("requestData", requestData))
-		updateIfExists = true
+		debug.PrintStack()
+
+		log.Logger(ctx).Warn("handler-exec-flat - CopyObject: Received REPLACE meta directive", zap.Any("from", from), zap.Any("to", to), zap.Any("requestData", requestData))
+		updateIfExists = false
 
 		if e := f.resolveUUID(ctx, to); e != nil {
 			return models.ObjectInfo{}, e
 		}
-		if e := f.resolveUUID(ctx, from); e != nil {
-			return models.ObjectInfo{}, e
-		}
+		// if e := f.resolveUUID(ctx, from); e != nil {
+		// 	return models.ObjectInfo{}, e
+		// }
 	}
+
+	log.Logger(ctx).Debug("handler-exec-flat - CopyObject: Info", zap.Any("from", from), zap.Any("to", to))
 
 	if nodes.IsFlatStorage(ctx, "to") {
 		if len(requestData.SrcVersionId) > 0 {

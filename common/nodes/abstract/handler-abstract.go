@@ -152,6 +152,8 @@ func (a *Handler) CopyObject(ctx context.Context, from *tree.Node, to *tree.Node
 	if err != nil {
 		return models.ObjectInfo{}, err
 	}
+
+	// log.Logger(ctx).Debug("handler-abstract CopyObject: info", zap.Any("from", from), zap.Any("to", to), zap.Any("requestData", requestData))
 	return a.Next.CopyObject(ctx, from, to, requestData)
 }
 

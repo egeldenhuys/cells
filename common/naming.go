@@ -181,6 +181,7 @@ const (
 	PydioSystemUsername         = "pydio.system.user"
 	PydioS3AnonUsername         = "pydio.anon.user"
 	PydioSyncHiddenFile         = ".pydio"
+	XAmzMetaPrefix              = "X-Amz-Meta" // No "-" to also include X-Amz-Metadata-Directive
 	XAmzMetaClearSize           = "X-Amz-Meta-Pydio-Clear-Size"
 	XAmzMetaClearSizeUnknown    = "unknown"
 	XAmzMetaNodeUuid            = "X-Amz-Meta-Pydio-Node-Uuid"

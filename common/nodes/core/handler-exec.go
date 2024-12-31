@@ -177,8 +177,8 @@ func (e *Executor) GetObject(ctx context.Context, node *tree.Node, requestData *
 			return nil, err
 		}
 	}
-	reader, _, err = writer.GetObject(newCtx, info.ObjectsBucket, s3Path, headers)
 	logger.Debug("[handler exec] Get Object", zap.String("bucket", info.ObjectsBucket), zap.String("s3path", s3Path), zap.Any("request", requestData), zap.Any("resultObject", reader))
+	reader, _, err = writer.GetObject(newCtx, info.ObjectsBucket, s3Path, headers)
 	if err != nil {
 		logger.Error("Get Object", zap.Error(err))
 	}
@@ -229,6 +229,12 @@ func (e *Executor) CopyObject(ctx context.Context, from *tree.Node, to *tree.Nod
 	destBucket := destInfo.ObjectsBucket
 	srcBucket := srcInfo.ObjectsBucket
 
+	log.Logger(ctx).Debug("handler-exec CopyObject: Info",
+		zap.Any("destClient", destClient),
+		zap.Any("srcClient", srcClient),
+		zap.Any("destBucket", destBucket),
+		zap.Any("srcBucket", srcBucket))
+
 	fromPath := e.buildS3Path(srcInfo, from)
 	toPath := e.buildS3Path(destInfo, to)
 	cType := from.GetStringMeta(common.MetaNamespaceMime)
@@ -242,6 +248,14 @@ func (e *Executor) CopyObject(ctx context.Context, from *tree.Node, to *tree.Nod
 	if destClient == srcClient && requestData.SrcVersionId == "" {
 		// Check object exists and check its size
 		src, e := destClient.StatObject(ctx, srcBucket, fromPath, nil)
+
+		log.Logger(ctx).Debug("handler-exec - CopyObject: dstClient == srcClient",
+			zap.Any("from", from),
+			zap.Any("to", to),
+			zap.Any("src", src),
+			zap.Any("requestData", requestData),
+			zap.Any("statMeta", statMeta))
+
 		if e != nil {
 			log.Logger(ctx).Error("HandlerExec: Error on CopyObject while first stating source", zap.Error(e))
 			if e.Error() == noSuchKeyString {
