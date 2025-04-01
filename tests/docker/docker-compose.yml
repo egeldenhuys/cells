@@ -1,0 +1,24 @@
+services:
+  mariadb:
+    image: docker.io/mariadb:11.6
+    container_name: pydio_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: TODO
+      MYSQL_DATABASE: cells
+      MYSQL_USER: pydio
+      MYSQL_PASSWORD: TODO
+    command: [mariadbd, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysqldir:/var/lib/mysql:z
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: pydio_minio
+    command: ["server", "/data", "--console-address", ':9001']
+    volumes:
+      - ./miniodata:/data:z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
