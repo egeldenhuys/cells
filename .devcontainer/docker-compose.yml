@@ -1,0 +1,27 @@
+x-podman:
+  in_pod: false
+
+services:
+  pydio-cells-dev:
+    image: mcr.microsoft.com/devcontainers/go:1-1.23-bookworm
+    container_name: pydio-cells-dev
+    userns_mode: keep-id
+    volumes:
+      - ../:/workspaces/evert-cells:z
+      - /home/evert/go/pkg/mod:/go/pkg/mod:z
+
+    command: /bin/sh -c "while sleep 1000; do :; done"
+
+  mariadb:
+    image: docker.io/mariadb:11.6
+    container_name: pydio-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: PASSWORD
+      MYSQL_DATABASE: cells
+      MYSQL_USER: pydio
+      MYSQL_PASSWORD: PASSWORD
+    command: [mariadbd, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    # ports:
+      # - 127.0.0.1:3306:3306
+    volumes:
+      - ./data/mysqldir:/var/lib/mysql:z
