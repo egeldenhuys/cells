@@ -2,19 +2,20 @@ x-podman:
   in_pod: false
 
 services:
-  pydio-cells-dev:
+  pydio:
     image: mcr.microsoft.com/devcontainers/go:1-1.23-bookworm
     container_name: pydio-cells-dev
     userns_mode: keep-id
     volumes:
       - ../:/workspaces/evert-cells:z
-      - /home/evert/go/pkg/mod:/go/pkg/mod:z
+      - ./data/cells:/data:z
+      - /home/evert/go/pkg/mod:/go/pkg/mod:z # For go cache
 
     command: /bin/sh -c "while sleep 1000; do :; done"
 
   mariadb:
     image: docker.io/mariadb:11.6
-    container_name: pydio-mariadb
+    container_name: pydio-mariadb-dev
     environment:
       MYSQL_ROOT_PASSWORD: PASSWORD
       MYSQL_DATABASE: cells
@@ -25,3 +26,9 @@ services:
       # - 127.0.0.1:3306:3306
     volumes:
       - ./data/mysqldir:/var/lib/mysql:z
+
+  cloudflared:
+    image: docker.io/cloudflare/cloudflared:latest
+    container_name: cloudflare-pydio-dev
+    env_file: ".env"
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}

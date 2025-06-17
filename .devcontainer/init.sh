@@ -1,4 +1,6 @@
 #!/bin/bash
 
 mkdir data
-mkdir mysqldir
+mkdir data/mysqldir
+mkdir data/cells
+
